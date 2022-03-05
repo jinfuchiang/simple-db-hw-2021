@@ -63,9 +63,6 @@ public class TupleDesc implements Serializable {
      */
     public TupleDesc(Type[] typeAr, String[] fieldAr) {
         int numFields = typeAr.length;
-        if (fieldAr == null) {
-            fieldAr = new String[numFields];
-        }
         tdItems = new ArrayList<>(typeAr.length);
         for (int i = 0; i < numFields; i++) {
             tdItems.add(new TDItem(typeAr[i], fieldAr[i]));
@@ -81,7 +78,7 @@ public class TupleDesc implements Serializable {
      *            TupleDesc. It must contain at least one entry.
      */
     public TupleDesc(Type[] typeAr) {
-        this(typeAr, null);
+        this(typeAr, new String[typeAr.length]);
     }
 
     /**
@@ -131,7 +128,7 @@ public class TupleDesc implements Serializable {
         int numFields = numFields();
         for (int i = 0; i < numFields; i++) {
             TDItem tditem = tdItems.get(i);
-            if(tditem.fieldName.equals(name)) return i;
+            if(tditem.fieldName != null && tditem.fieldName.equals(name)) return i;
         }
         throw new NoSuchElementException(name);
     }
