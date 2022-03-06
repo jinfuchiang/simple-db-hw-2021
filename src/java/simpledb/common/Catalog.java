@@ -5,10 +5,7 @@ import simpledb.storage.DbFile;
 import simpledb.storage.HeapFile;
 import simpledb.storage.TupleDesc;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,12 +20,30 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Catalog {
 
+    public static class Schema implements Serializable {
+
+        public DbFile dbFile;
+
+        public String tableName;
+
+        public String primaryKeyField;
+
+        public Schema(DbFile dbFile, String tableName, String primaryKeyField) {
+            this.dbFile = dbFile;
+            this.tableName = tableName;
+            this.primaryKeyField = primaryKeyField;
+        }
+    }
+    private final Map<Integer, Schema> idSchemaMap;
+//    private final List<TupleDesc> tablesDescription;
+
+//    private
     /**
      * Constructor.
      * Creates a new, empty catalog.
      */
     public Catalog() {
-        // some code goes here
+        idSchemaMap = new HashMap<>();
     }
 
     /**
@@ -41,7 +56,7 @@ public class Catalog {
      * @param pkeyField the name of the primary key field
      */
     public void addTable(DbFile file, String name, String pkeyField) {
-        // some code goes here
+        idSchemaMap.put(file.getId(), new Schema(file, name, pkeyField));
     }
 
     public void addTable(DbFile file, String name) {
@@ -64,8 +79,13 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public int getTableId(String name) throws NoSuchElementException {
-        // some code goes here
-        return 0;
+        for (Map.Entry<Integer, Schema> entry:
+             idSchemaMap.entrySet()) {
+            int id = entry.getKey();
+            Schema schema = entry.getValue();
+            if (schema.tableName.equals(name)) return id;
+        }
+        throw new NoSuchElementException(name);
     }
 
     /**
@@ -75,8 +95,7 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
-        // some code goes here
-        return null;
+        return getDatabaseFile(tableid).getTupleDesc();
     }
 
     /**
@@ -86,28 +105,27 @@ public class Catalog {
      *     function passed to addTable
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
-        // some code goes here
-        return null;
+        return getSchema(tableid).dbFile;
     }
 
     public String getPrimaryKey(int tableid) {
-        // some code goes here
-        return null;
+        return getSchema(tableid).primaryKeyField;
     }
 
     public Iterator<Integer> tableIdIterator() {
-        // some code goes here
-        return null;
+        return idSchemaMap.keySet().iterator();
     }
 
     public String getTableName(int id) {
-        // some code goes here
-        return null;
+        return getSchema(id).tableName;
     }
-    
+
+    public Schema getSchema(int tableid) {
+        return idSchemaMap.get(tableid);
+    }
     /** Delete all tables from the catalog */
     public void clear() {
-        // some code goes here
+        idSchemaMap.clear();
     }
     
     /**
