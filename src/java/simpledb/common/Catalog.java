@@ -1,13 +1,11 @@
 package simpledb.common;
 
-import simpledb.common.Type;
 import simpledb.storage.DbFile;
 import simpledb.storage.HeapFile;
 import simpledb.storage.TupleDesc;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Catalog keeps track of all available tables in the database and their
@@ -34,16 +32,15 @@ public class Catalog {
             this.primaryKeyField = primaryKeyField;
         }
     }
-    private final Map<Integer, Schema> idSchemaMap;
-//    private final List<TupleDesc> tablesDescription;
 
-//    private
+    private final Map<Integer, Schema> tableId2Schema;
+
     /**
      * Constructor.
      * Creates a new, empty catalog.
      */
     public Catalog() {
-        idSchemaMap = new HashMap<>();
+        tableId2Schema = new HashMap<>();
     }
 
     /**
@@ -56,7 +53,7 @@ public class Catalog {
      * @param pkeyField the name of the primary key field
      */
     public void addTable(DbFile file, String name, String pkeyField) {
-        idSchemaMap.put(file.getId(), new Schema(file, name, pkeyField));
+        tableId2Schema.put(file.getId(), new Schema(file, name, pkeyField));
     }
 
     public void addTable(DbFile file, String name) {
@@ -80,7 +77,7 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         for (Map.Entry<Integer, Schema> entry:
-             idSchemaMap.entrySet()) {
+             tableId2Schema.entrySet()) {
             int id = entry.getKey();
             Schema schema = entry.getValue();
             if (schema.tableName.equals(name)) return id;
@@ -113,7 +110,7 @@ public class Catalog {
     }
 
     public Iterator<Integer> tableIdIterator() {
-        return idSchemaMap.keySet().iterator();
+        return tableId2Schema.keySet().iterator();
     }
 
     public String getTableName(int id) {
@@ -121,11 +118,11 @@ public class Catalog {
     }
 
     public Schema getSchema(int tableid) {
-        return idSchemaMap.get(tableid);
+        return tableId2Schema.get(tableid);
     }
     /** Delete all tables from the catalog */
     public void clear() {
-        idSchemaMap.clear();
+        tableId2Schema.clear();
     }
     
     /**
