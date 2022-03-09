@@ -69,6 +69,14 @@ public class Tuple implements Serializable {
         }
     }
 
+    public int setField(int i, Tuple tuple) {
+        int size = tuple.getTupleDesc().numFields();
+        for (int j = 0; j < size; j++) {
+            setField(i, tuple.getField(j));
+            ++i;
+        }
+        return i;
+    }
     /**
      * @return the value of the ith field, or null if it has not been set.
      *
