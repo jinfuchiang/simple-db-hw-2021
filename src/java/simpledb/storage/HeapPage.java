@@ -246,7 +246,7 @@ public class HeapPage implements Page {
      */
     public void deleteTuple(Tuple t) throws DbException {
         for (int i = 0; i < tuples.length; i++) {
-            if (tuples[i].equals(t)) {
+            if (isSlotUsed(i) && tuples[i].equals(t)) {
                 markSlotUsed(i, false);
                 return;
             }
