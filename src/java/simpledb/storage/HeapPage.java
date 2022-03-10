@@ -247,7 +247,7 @@ public class HeapPage implements Page {
     public void deleteTuple(Tuple t) throws DbException {
         for (int i = 0; i < tuples.length; i++) {
             if (tuples[i].equals(t)) {
-                header[i/8] = (byte) (header[i/8] & (byte) (1 << (i%8)));
+                markSlotUsed(i, false);
                 return;
             }
         }
@@ -262,17 +262,25 @@ public class HeapPage implements Page {
      * @param t The tuple to add.
      */
     public void insertTuple(Tuple t) throws DbException {
-        // some code goes here
-        // not necessary for lab1
+        if (!tupleDescription.equals(t.getTupleDesc())) throw new DbException("mismatched tuple description");
+        for (int i = 0; i < tuples.length; i++) {
+            if (!isSlotUsed(i)) {
+                markSlotUsed(i, true);
+                tuples[i] = new Tuple(t.getTupleDesc());
+                RecordId rid = new RecordId(pid, i);
+                tuples[i].setRecordId(rid);
+                tuples[i].setField(0, t);
+                return;
+            }
+        }
+        throw new DbException("full page");
     }
-
     /**
      * Marks this page as dirty/not dirty and record that transaction
      * that did the dirtying
      */
     public void markDirty(boolean dirty, TransactionId tid) {
-        // some code goes here
-	// not necessary for lab1
+
     }
 
     /**
@@ -307,8 +315,14 @@ public class HeapPage implements Page {
      * Abstraction to fill or clear a slot on this page.
      */
     private void markSlotUsed(int i, boolean value) {
-        // some code goes here
-        // not necessary for lab1
+        byte b = header[i/8];
+        int index = i % 8;
+        if (value) {
+            b |= (1 << index);
+        } else {
+            b &= ~(1 << index);
+        }
+        header[i/8] = b;
     }
 
     /**
