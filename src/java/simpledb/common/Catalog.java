@@ -58,7 +58,12 @@ public class Catalog {
         Schema schema = tableId2Schema.get(file.getId());
         Integer tableId = name2TableId.get(name);
         if (tableId != null) {
+            // duplicate name
             tableId2Schema.remove(tableId);
+        }
+        if(schema != null) {
+            // duplicate id
+            name2TableId.remove(schema.tableName);
         }
         tableId2Schema.put(file.getId(), new Schema(file, name, pkeyField));
         name2TableId.put(name, file.getId());
@@ -106,7 +111,8 @@ public class Catalog {
      *     function passed to addTable
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
-        return getSchema(tableid).dbFile;
+        Schema schema = getSchema(tableid);
+        return schema.dbFile;
     }
 
     public String getPrimaryKey(int tableid) {
