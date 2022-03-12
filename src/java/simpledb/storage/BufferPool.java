@@ -9,6 +9,7 @@ import simpledb.transaction.TransactionId;
 import java.io.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -89,6 +90,9 @@ public class BufferPool {
         return page;
     }
 
+    private void putPage(Page page) {
+        pageId2Page.put(page.getId(), page);
+    }
     /**
      * Releases the lock on a page.
      * Calling this is very risky, and may result in wrong behavior. Think hard
@@ -149,8 +153,11 @@ public class BufferPool {
      */
     public void insertTuple(TransactionId tid, int tableId, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+        List<Page> pages = Database.getCatalog().getDatabaseFile(tableId).insertTuple(tid, t);
+        for (Page page:
+             pages) {
+            putPage(page);
+        }
     }
 
     /**
@@ -168,8 +175,8 @@ public class BufferPool {
      */
     public  void deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+        PageId pageId = t.getRecordId().getPageId();
+        Database.getCatalog().getDatabaseFile(pageId.getTableId()).deleteTuple(tid, t);
     }
 
     /**

@@ -34,6 +34,7 @@ public class Catalog {
     }
 
     private final Map<Integer, Schema> tableId2Schema;
+    private final Map<String, Integer> name2TableId;
 
     /**
      * Constructor.
@@ -41,6 +42,7 @@ public class Catalog {
      */
     public Catalog() {
         tableId2Schema = new HashMap<>();
+        name2TableId = new HashMap<>();
     }
 
     /**
@@ -53,7 +55,13 @@ public class Catalog {
      * @param pkeyField the name of the primary key field
      */
     public void addTable(DbFile file, String name, String pkeyField) {
+        Schema schema = tableId2Schema.get(file.getId());
+        Integer tableId = name2TableId.get(name);
+        if (tableId != null) {
+            tableId2Schema.remove(tableId);
+        }
         tableId2Schema.put(file.getId(), new Schema(file, name, pkeyField));
+        name2TableId.put(name, file.getId());
     }
 
     public void addTable(DbFile file, String name) {
@@ -76,13 +84,9 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public int getTableId(String name) throws NoSuchElementException {
-        for (Map.Entry<Integer, Schema> entry:
-             tableId2Schema.entrySet()) {
-            int id = entry.getKey();
-            Schema schema = entry.getValue();
-            if (schema.tableName.equals(name)) return id;
-        }
-        throw new NoSuchElementException(name);
+        Integer tableId = name2TableId.get(name);
+        if (tableId == null) throw new NoSuchElementException();
+        return tableId;
     }
 
     /**

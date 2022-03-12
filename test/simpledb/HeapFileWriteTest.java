@@ -77,7 +77,7 @@ public class HeapFileWriteTest extends TestUtil.CreateHeapFile {
         smallFile.writePage(new HeapPage(new HeapPageId(tableId, 2), full));
         smallFile.writePage(new HeapPage(new HeapPageId(tableId, 3), empty));
         smallFile.writePage(new HeapPage(new HeapPageId(tableId, 4), full));
-        DbFileIterator it = smallFile.iterator(tid);
+        DbFileIterator it  =smallFile.iterator(tid);
         it.open();
         int count = 0;
         while (it.hasNext()) {
