@@ -44,10 +44,14 @@ public class Aggregate extends Operator {
         aggregateFieldIndex = afield;
         groupFieldIndex = gfield;
         this.aop = aop;
+        Type groupFieldType = null;
+        if (gfield != -1) {
+            groupFieldType = child.getTupleDesc().getFieldType(gfield);
+        }
         if (child.getTupleDesc().getFieldType(afield).equals(Type.INT_TYPE)) {
-            aggregator = new IntegerAggregator(gfield, child.getTupleDesc().getFieldType(gfield), afield, aop);
+            aggregator = new IntegerAggregator(gfield, groupFieldType, afield, aop);
         } else {
-            aggregator = new StringAggregator(gfield, child.getTupleDesc().getFieldType(gfield), afield, aop);
+            aggregator = new StringAggregator(gfield, groupFieldType, afield, aop);
         }
     }
 

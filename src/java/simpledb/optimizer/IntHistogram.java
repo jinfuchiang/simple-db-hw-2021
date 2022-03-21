@@ -6,6 +6,11 @@ import simpledb.execution.Predicate;
  */
 public class IntHistogram {
 
+    private int min;
+    private int max;
+    private int[] histogram;
+    private int delta;
+    private int nTuples;
     /**
      * Create a new IntHistogram.
      * 
@@ -23,7 +28,22 @@ public class IntHistogram {
      * @param max The maximum integer value that will ever be passed to this class for histogramming
      */
     public IntHistogram(int buckets, int min, int max) {
-    	// some code goes here
+        this.max = max;
+        this.min = min;
+        histogram = new int[buckets];
+        delta = ceilDivide(max-min+1, Math.min(buckets, max - min + 1));
+    }
+
+    public int ceilDivide(int i, int j) {
+        return (i - 1) / j + 1;
+    }
+
+    public int whichBuckets(int v) {
+        return (v - min) / delta;
+    }
+
+    public int getValue(int v) {
+        return histogram[whichBuckets(v)];
     }
 
     /**
@@ -31,9 +51,39 @@ public class IntHistogram {
      * @param v Value to add to the histogram
      */
     public void addValue(int v) {
-    	// some code goes here
+        nTuples++;
+        histogram[whichBuckets(v)]++;
     }
 
+    public double estimateEqualSelectivity(int v) {
+        if (v < min || v > max) return 0;
+        int h = getValue(v);
+        return (double) ceilDivide(h, delta) / nTuples;
+    }
+
+    public double estimateGreaterThanSelectivity(int v, boolean isClosed) {
+        int i = whichBuckets(v);
+        int numTargetTuples = 0;
+        if (i >= 0 && i < histogram.length) {
+            int bRight = (i + 1) * delta + min;
+            int h = histogram[i];
+            int w = bRight - v;
+            if (!isClosed) {
+                --w;
+            }
+            numTargetTuples = w * h;
+        }
+
+        if (i < 0) {
+            i = -1;
+        }
+
+        for (int j = i+1; j < histogram.length; j++) {
+            numTargetTuples += histogram[j];
+        }
+
+        return (double) numTargetTuples / nTuples;
+    }
     /**
      * Estimate the selectivity of a particular predicate and operand on this table.
      * 
@@ -45,9 +95,23 @@ public class IntHistogram {
      * @return Predicted selectivity of this particular operator and value
      */
     public double estimateSelectivity(Predicate.Op op, int v) {
-
-    	// some code goes here
-        return -1.0;
+        switch (op) {
+            case EQUALS:
+            case LIKE:
+                return estimateEqualSelectivity(v);
+            case NOT_EQUALS:
+                return 1 - estimateEqualSelectivity(v);
+            case GREATER_THAN:
+                return estimateGreaterThanSelectivity(v, false);
+            case GREATER_THAN_OR_EQ:
+                return estimateGreaterThanSelectivity(v, true);
+            case LESS_THAN:
+                return 1 - estimateGreaterThanSelectivity(v, true);
+            case LESS_THAN_OR_EQ:
+                return 1 - estimateGreaterThanSelectivity(v, false);
+            default:
+                return 0;
+        }
     }
     
     /**

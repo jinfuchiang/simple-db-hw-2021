@@ -22,6 +22,7 @@ public class Delete extends Operator {
     final private TransactionId transactionId;
     private OpIterator child;
     static TupleDesc tupleDesc = new TupleDesc(new Type[]{Type.INT_TYPE});
+    private boolean isFirst;
 
     /**
      * Constructor specifying the transaction that this delete belongs to as
@@ -43,10 +44,12 @@ public class Delete extends Operator {
 
     public void open() throws DbException, TransactionAbortedException {
         super.open(); child.open();
+        isFirst = true;
     }
 
     public void close() {
         super.close(); child.close();
+        isFirst = false;
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
@@ -63,6 +66,9 @@ public class Delete extends Operator {
      * @see BufferPool#deleteTuple
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
+        if (isFirst) isFirst = false;
+        else return null;
+
         int cnt = 0;
         while (child.hasNext()) {
             Tuple tuple = child.next();
